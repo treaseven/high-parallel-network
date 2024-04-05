@@ -1,6 +1,7 @@
 #include "Channel.h"
 #include "InetAddress.h"
 #include "Socket.h"
+#include "Connection.h"
 
 Channel::Channel(EventLoop* loop, int fd):loop_(loop), fd_(fd)
 {
@@ -89,10 +90,11 @@ void Channel::newconection(Socket *servsock)
 
     printf("accept client(fd=%d, ip=%s, port=%d) ok.\n", clientsock->fd(), clientaddr.ip(), clientaddr.port());
 
-    Channel *clientchannel = new Channel(loop_, clientsock->fd());
+    /*Channel *clientchannel = new Channel(loop_, clientsock->fd());
     clientchannel->setreadcallback(std::bind(&Channel::onmessage, clientchannel));
     clientchannel->useet();
-    clientchannel->enablereading();
+    clientchannel->enablereading();*/
+    Connection *conn = new Connection(loop_, clientsock);
 }
 
 void Channel::onmessage()
