@@ -11,6 +11,7 @@
 #include <netinet/tcp.h>
 #include "InetAddress.h"
 #include "Socket.h"
+#include "Epoll.h"
 
 int main(int argc, char *argv[])
 {
@@ -21,18 +22,6 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    /*int listenfd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, IPPROTO_TCP);
-    if (listenfd < 0)
-    {
-        perror("socket() failed");
-        return -1;
-    }
-
-    int opt = 1;
-    setsockopt(listenfd, SOL_SOCKET, SO_REUSEADDR, &opt, static_cast<socklen_t>(sizeof opt));
-    setsockopt(listenfd, SOL_SOCKET, TCP_NODELAY, &opt, static_cast<socklen_t>(sizeof opt));
-    setsockopt(listenfd, SOL_SOCKET, SO_REUSEPORT, &opt, static_cast<socklen_t>(sizeof opt));
-    setsockopt(listenfd, SOL_SOCKET, SO_KEEPALIVE, &opt, static_cast<socklen_t>(sizeof opt));*/
     Socket servsock(createnonblocking());
     InetAddress servaddr(argv[1], atoi(argv[2]));
     servsock.setreuseaddr(true);
@@ -40,23 +29,10 @@ int main(int argc, char *argv[])
     servsock.setreuseport(true);
     servsock.setkeepalive(true);
 
-    /*if (bind(listenfd, servaddr.addr(), sizeof(sockaddr)) < 0)
-    {
-        perror("bind() failed");
-        close(listenfd);
-        return -1;
-    }
-
-    if (listen(listenfd, 128) != 0)
-    {
-        perror("listen() failed");
-        close(listenfd);
-        return -1;
-    }*/
     servsock.bind(servaddr);
     servsock.listen();
 
-    int epollfd = epoll_create(1);
+    /*int epollfd = epoll_create(1);
 
     struct epoll_event ev;
     ev.data.fd  = servsock.fd();
@@ -64,11 +40,15 @@ int main(int argc, char *argv[])
 
     epoll_ctl(epollfd, EPOLL_CTL_ADD, servsock.fd(), &ev);
 
-    struct epoll_event evs[10];
+    struct epoll_event evs[10];*/
+
+    Epoll ep;
+    ep.addfd(servsock.fd(), EPOLLIN);
+    std::vector<epoll_event> evs;
 
     while(true)
     {
-        int infds = epoll_wait(epollfd, evs, 10, -1);
+        /*int infds = epoll_wait(epollfd, evs, 10, -1);
 
         if (infds < 0)
         {
@@ -80,23 +60,20 @@ int main(int argc, char *argv[])
         {
             printf("epoll_wait() timeout.\n");
             continue;
-        }
+        }*/
+        evs = ep.loop();
 
-        for (int ii = 0; ii < infds; ii++)
+        for (auto &ev:evs)
         {
-            if (evs[ii].events & EPOLLRDHUP)
+            if (ev.events & EPOLLRDHUP)
             {
-                printf("client(clientfd=%d) disconnected.\n", evs[ii].data.fd);
-                close(evs[ii].data.fd);
+                printf("client(clientfd=%d) disconnected.\n", ev.data.fd);
+                close(ev.data.fd);
             }
-            else if (evs[ii].events & (EPOLLIN | EPOLLPRI))
+            else if (ev.events & (EPOLLIN | EPOLLPRI))
             {
-                if (evs[ii].data.fd == servsock.fd())
+                if (ev.data.fd == servsock.fd())
                 {
-                    /*struct sockaddr_in peeraddr;
-                    socklen_t len = sizeof(peeraddr);
-                    int clientfd = accept(listenfd, (struct sockaddr *)&peeraddr, &len);*/
-
                     InetAddress clientaddr;
                     Socket *clientsock = new Socket(servsock.accept(clientaddr));
 
@@ -104,7 +81,7 @@ int main(int argc, char *argv[])
 
                     ev.data.fd = clientsock->fd();
                     ev.events = EPOLLIN|EPOLLET;
-                    epoll_ctl(epollfd, EPOLL_CTL_ADD, clientsock->fd(), &ev);
+                    ep.addfd(clientsock->fd(), EPOLLIN | EPOLLET);
                 }
                 else
                 {
@@ -112,11 +89,11 @@ int main(int argc, char *argv[])
                     while(true)
                     {
                         bzero(&buffer, sizeof(buffer));
-                        ssize_t nread = read(evs[ii].data.fd, buffer, sizeof(buffer));
+                        ssize_t nread = read(ev.data.fd, buffer, sizeof(buffer));
                         if (nread > 0)
                         {
-                            printf("recv(eventfd=%d):%s\n", evs[ii].data.fd, buffer);
-                            send(evs[ii].data.fd, buffer, strlen(buffer), 0);
+                            printf("recv(eventfd=%d):%s\n", ev.data.fd, buffer);
+                            send(ev.data.fd, buffer, strlen(buffer), 0);
                         }
                         else if (nread == -1 && errno == EINTR)
                         {
@@ -128,21 +105,21 @@ int main(int argc, char *argv[])
                         }
                         else if (nread == 0)
                         {
-                            printf("client(eventfd=%d) disconnected.\n", evs[ii].data.fd);
-                            close(evs[ii].data.fd);
+                            printf("client(eventfd=%d) disconnected.\n", ev.data.fd);
+                            close(ev.data.fd);
                             break;
                         }
                     }
                 }
             }
-            else if (evs[ii].events & EPOLLOUT)
+            else if (ev.events & EPOLLOUT)
             {
 
             }
             else
             {
-                    printf("clientfd(eventfd=%d) error.\n", evs[ii].data.fd);
-                    close(evs[ii].data.fd);
+                    printf("clientfd(eventfd=%d) error.\n", ev.data.fd);
+                    close(ev.data.fd);
             }
         }
         
