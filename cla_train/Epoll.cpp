@@ -94,7 +94,7 @@ std::vector<Channel *> Epoll::loop(int timeout)
 
     if (infds == 0)
     {
-        printf("epoll_wait() timeout.\n");
+        //printf("epoll_wait() timeout.\n");
         return channels;
     }
 

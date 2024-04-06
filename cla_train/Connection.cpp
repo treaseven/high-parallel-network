@@ -62,6 +62,11 @@ void Connection::setonmessagecallback(std::function<void(Connection *, std::stri
     onmessagecallback_ = fn;
 }
 
+void Connection::setsendcompletecallback(std::function<void(Connection *)> fn)
+{
+    sendcompletecallback_ = fn;
+}
+
 void Connection::onmessage()
 {
     char buffer[1024];
@@ -125,5 +130,9 @@ void Connection::writecallback()
     int writen=::send(fd(), outputbuffer_.data(), outputbuffer_.size(), 0);
     if (writen>0) outputbuffer_.erase(0, writen);
 
-    if(outputbuffer_.size() == 0) clientchannel_->disablewriting();
+    if(outputbuffer_.size() == 0) 
+    {
+        clientchannel_->disablewriting();
+        sendcompletecallback_(this);
+    }
 }

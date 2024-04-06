@@ -21,4 +21,6 @@ public:
     void closeconnection(Connection *conn);
     void errorconnection(Connection *conn);
     void onmessage(Connection *conn, std::string message);
+    void sendcomplete(Connection *conn);
+    void epolltimeout(EventLoop *loop);
 };
