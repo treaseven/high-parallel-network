@@ -59,16 +59,12 @@ void Channel::handleevent()
 {
     if (revents_ & EPOLLRDHUP)
     {
-        printf("client(eventfs=%d) disconnected.\n", fd_);
-        close(fd_);
+        //printf("client(eventfs=%d) disconnected.\n", fd_);
+        //close(fd_);
+        closecallback_();
     }
     else if (revents_ & (EPOLLIN | EPOLLPRI))
     {
-        /*if (islisten_ == true)
-            newconection(servsock);
-        else
-            onmessage();*/
-
         readcallback_();
     }
     else if (revents_ & EPOLLOUT)
@@ -77,21 +73,11 @@ void Channel::handleevent()
     }
     else
     {
-        printf("client(eventfd=%d) error.\n", fd_);
-        close(fd_);
+        //printf("client(eventfd=%d) error.\n", fd_);
+        //close(fd_);
+        errorcallback_();
     }
 }
-
-/*void Channel::newconection(Socket *servsock)
-{
-    InetAddress clientaddr;
-
-    Socket *clientsock = new Socket(servsock->accept(clientaddr));
-
-    printf("accept client(fd=%d, ip=%s, port=%d) ok.\n", clientsock->fd(), clientaddr.ip(), clientaddr.port());
-
-    Connection *conn = new Connection(loop_, clientsock);
-}*/
 
 void Channel::onmessage()
 {
@@ -115,8 +101,9 @@ void Channel::onmessage()
         }
         else if (nread == 0)
         {
-            printf("client(eventfd=%d) disconnected.\n", fd_);
-            close(fd_);
+            //printf("client(eventfd=%d) disconnected.\n", fd_);
+            //close(fd_);
+            closecallback_();
             break;
         }
     }
@@ -125,4 +112,14 @@ void Channel::onmessage()
 void Channel::setreadcallback(std::function<void()> fn)
 {
     readcallback_ = fn;
+}
+
+void Channel::setclosecallback(std::function<void()> fn)
+{
+    closecallback_ = fn;
+}
+
+void Channel::seterrorcallback(std::function<void()> fn)
+{
+    errorcallback_ = fn;
 }

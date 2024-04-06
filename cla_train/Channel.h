@@ -16,6 +16,8 @@ private:
     uint32_t events_ = 0;
     uint32_t revents_ = 0;
     std::function<void()> readcallback_;
+    std::function<void()> closecallback_;
+    std::function<void()> errorcallback_;
 public:
     Channel(EventLoop* loop, int fd);
     ~Channel();
@@ -30,7 +32,10 @@ public:
     uint32_t revents();
 
     void handleevent();
-    //void newconection(Socket *servsock);
+
     void onmessage();
     void setreadcallback(std::function<void()> fn);
+
+    void setclosecallback(std::function<void()> fn);
+    void seterrorcallback(std::function<void()> fn);
 };
