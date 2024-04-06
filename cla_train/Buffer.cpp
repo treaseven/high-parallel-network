@@ -29,3 +29,8 @@ void Buffer::clear()
 {
     buf_.clear();
 }
+
+void Buffer::erase(size_t pos, size_t nn)
+{
+    buf_.erase(pos, nn);
+}

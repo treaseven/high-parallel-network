@@ -11,7 +11,8 @@ public:
     ~Buffer();
 
     void append(const char *data, size_t size);
+    void erase(size_t pos, size_t nn);
     size_t size();
     const char *data();
-    void clear();
+    void clear(); 
 };

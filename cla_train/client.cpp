@@ -41,26 +41,26 @@ int main(int argc, char *argv[])
 
     printf("connect ok.\n");
 
-    for (int ii = 0; ii < 200000; ii++)
+    for (int ii = 0; ii < 100; ii++)
     {
         memset(buf, 0, sizeof(buf));
-        printf("please input:");
-        scanf("%s", buf);
+        sprintf(buf, "这是第%d个报文", ii);
 
-        if (send(sockfd, buf, strlen(buf), 0) <= 0)
-        {
-            printf("write() failed.\n");
-            close(sockfd);
-            return -1;
-        }
+        char tmpbuf[1024];
+        memset(tmpbuf, 0, sizeof(tmpbuf));
+        int len = strlen(buf);
+        memcpy(tmpbuf, &len, 4);
+        memcpy(tmpbuf+4, buf, len);
 
+        send(sockfd, tmpbuf, len+4, 0);
+    }
+
+    for (int ii = 0; ii < 100; ii++)
+    {
+        int len;
+        recv(sockfd, &len, 4, 0);
         memset(buf, 0, sizeof(buf));
-        if(recv(sockfd, buf, sizeof(buf), 0) <= 0)
-        {
-            printf("read() failed.\n");
-            close(sockfd);
-            return -1;
-        }
+        recv(sockfd, buf, len, 0);
 
         printf("recv:%s\n", buf);
     }
