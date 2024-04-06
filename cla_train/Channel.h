@@ -30,7 +30,7 @@ public:
     uint32_t revents();
 
     void handleevent();
-    void newconection(Socket *servsock);
+    //void newconection(Socket *servsock);
     void onmessage();
     void setreadcallback(std::function<void()> fn);
 };

@@ -14,4 +14,6 @@ private:
 public:
     Acceptor(EventLoop *Loop, const std::string &ip, const uint16_t port);
     ~Acceptor();
+
+    void newconection();
 };

@@ -1,4 +1,5 @@
 #include "Acceptor.h"
+#include "Connection.h"
 
 Acceptor::Acceptor(EventLoop *Loop, const std::string &ip, const uint16_t port):loop_(Loop)
 {
@@ -12,7 +13,8 @@ Acceptor::Acceptor(EventLoop *Loop, const std::string &ip, const uint16_t port):
     servsock_->listen();
 
     acceptchannel_ = new Channel(loop_, servsock_->fd());
-    acceptchannel_->setreadcallback(std::bind(&Channel::newconection, acceptchannel_, servsock_));
+    //acceptchannel_->setreadcallback(std::bind(&Channel::newconection, acceptchannel_, servsock_));
+    acceptchannel_->setreadcallback(std::bind(&Acceptor::newconection, this));
     acceptchannel_->enablereading();
 }
 
@@ -20,4 +22,19 @@ Acceptor::~Acceptor()
 {
     delete servsock_;
     delete acceptchannel_;
+}
+
+void Acceptor::newconection()
+{
+    InetAddress clientaddr;
+
+    Socket *clientsock = new Socket(servsock_->accept(clientaddr));
+
+    printf("accept client(fd=%d, ip=%s, port=%d) ok.\n", clientsock->fd(), clientaddr.ip(), clientaddr.port());
+
+    /*Channel *clientchannel = new Channel(loop_, clientsock->fd());
+    clientchannel->setreadcallback(std::bind(&Channel::onmessage, clientchannel));
+    clientchannel->useet();
+    clientchannel->enablereading();*/
+    Connection *conn = new Connection(loop_, clientsock);
 }
