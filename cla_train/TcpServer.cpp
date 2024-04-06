@@ -24,7 +24,26 @@ void TcpServer::start()
 void TcpServer::newconection(Socket *clientsock)
 {
     Connection *conn = new Connection(&loop_, clientsock);
+
+    conn->setclosecallback(std::bind(&TcpServer::closeconnection, this, std::placeholders::_1));
+    conn->seterrorcallback(std::bind(&TcpServer::errorconnection, this, std::placeholders::_1));
     printf("new connection(fd=%d, ip=%s, port=%d) ok.\n", conn->fd(), conn->ip().c_str(), conn->port());
 
     conns_[conn->fd()] = conn;
+}
+
+void TcpServer::closeconnection(Connection *conn)
+{
+    printf("client(eventfs=%d) disconnected.\n", conn->fd());
+    //close(conn->fd());
+    conns_.erase(conn->fd());
+    delete conn;
+}
+
+void TcpServer::errorconnection(Connection *conn)
+{
+    printf("client(eventfd=%d) error.\n", conn->fd());
+    //close(conn->fd());
+    conns_.erase(conn->fd());
+    delete conn;
 }

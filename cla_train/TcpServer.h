@@ -17,4 +17,7 @@ public:
 
     void start();
     void newconection(Socket *clientsock);
+
+    void closeconnection(Connection *conn);
+    void errorconnection(Connection *conn);
 };
