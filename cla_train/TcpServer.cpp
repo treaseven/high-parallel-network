@@ -3,19 +3,8 @@
 
 TcpServer::TcpServer(const std::string &ip, const uint16_t port)
 {
-    /*Socket *servsock = new Socket((createnonblocking()));
-    InetAddress servaddr(ip, port);
-    servsock->setreuseaddr(true);
-    servsock->settcpnodelay(true);
-    servsock->setreuseport(true);
-    servsock->setkeepalive(true);
-    servsock->bind(servaddr);
-    servsock->listen();
-
-    Channel *servchannel = new Channel(&loop_, servsock->fd());
-    servchannel->setreadcallback(std::bind(&Channel::newconection, servchannel, servsock));
-    servchannel->enablereading();*/
     acceptor_ = new Acceptor(&loop_, ip, port);
+    acceptor_->setnewconnectioncb(std::bind(&TcpServer::newconection, this,std::placeholders::_1));
 }
 
 TcpServer::~TcpServer()
@@ -26,4 +15,9 @@ TcpServer::~TcpServer()
 void TcpServer::start()
 {
     loop_.run();
+}
+
+void TcpServer::newconection(Socket *clientsock)
+{
+    Connection *conn = new Connection(&loop_, clientsock);
 }

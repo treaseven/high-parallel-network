@@ -32,9 +32,10 @@ void Acceptor::newconection()
 
     printf("accept client(fd=%d, ip=%s, port=%d) ok.\n", clientsock->fd(), clientaddr.ip(), clientaddr.port());
 
-    /*Channel *clientchannel = new Channel(loop_, clientsock->fd());
-    clientchannel->setreadcallback(std::bind(&Channel::onmessage, clientchannel));
-    clientchannel->useet();
-    clientchannel->enablereading();*/
-    Connection *conn = new Connection(loop_, clientsock);
+    newconnectioncb_(clientsock);
+}
+
+void Acceptor::setnewconnectioncb(std::function<void(Socket *)> fn)
+{
+    newconnectioncb_ = fn;
 }
