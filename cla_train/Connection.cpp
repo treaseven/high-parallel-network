@@ -6,7 +6,8 @@ Connection::Connection(EventLoop *loop, Socket *clientsock):loop_(loop),clientso
     clientchannel_->setreadcallback(std::bind(&Connection::onmessage, this));
     clientchannel_->setclosecallback(std::bind(&Connection::closecallback, this));
     clientchannel_->seterrorcallback(std::bind(&Connection::errorcallback, this));
-    clientchannel_->useet();
+    clientchannel_->setwritecallback(std::bind(&Connection::writecallback, this));
+    //clientchannel_->useet();
     clientchannel_->enablereading();
 }
 
@@ -111,4 +112,18 @@ void Connection::onmessage()
             break;
         }
     }
+}
+
+void Connection::send(const char *data, size_t size)
+{
+    outputbuffer_.append(data, size);
+    clientchannel_->enablewriting();
+}
+
+void Connection::writecallback()
+{
+    int writen=::send(fd(), outputbuffer_.data(), outputbuffer_.size(), 0);
+    if (writen>0) outputbuffer_.erase(0, writen);
+
+    if(outputbuffer_.size() == 0) clientchannel_->disablewriting();
 }

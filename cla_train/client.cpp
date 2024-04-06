@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
 
     printf("connect ok.\n");
 
-    for (int ii = 0; ii < 100; ii++)
+    for (int ii = 0; ii < 2; ii++)
     {
         memset(buf, 0, sizeof(buf));
         sprintf(buf, "这是第%d个报文", ii);
@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
         send(sockfd, tmpbuf, len+4, 0);
     }
 
-    for (int ii = 0; ii < 100; ii++)
+    for (int ii = 0; ii < 2; ii++)
     {
         int len;
         recv(sockfd, &len, 4, 0);

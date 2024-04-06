@@ -28,8 +28,11 @@ public:
     void onmessage();
     void closecallback();
     void errorcallback();
+    void writecallback();
 
     void setclosecallback(std::function<void(Connection *)> fn);
     void seterrorcallback(std::function<void(Connection *)> fn);
     void setonmessagecallback(std::function<void(Connection *, std::string)> fn);
+
+    void send(const char *data, size_t size);
 };
