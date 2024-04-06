@@ -3,13 +3,17 @@
 #include "Socket.h"
 #include "Channel.h"
 #include "Acceptor.h"
+#include "ThreadPool.h"
 #include <map>
 
 class TcpServer
 {
 private:
-    EventLoop loop_;
+    EventLoop *mainloop_;
+    std::vector<EventLoop *> subloops_;
     Acceptor *acceptor_;
+    ThreadPool *threadpool_;
+    int threadnum_;
     std::map<int, Connection*> conns_;
     std::function<void(Connection *)> newconectioncb_;
     std::function<void(Connection *)> closeconectioncb_;
@@ -18,7 +22,7 @@ private:
     std::function<void(Connection *)> sendcompletecb_;
     std::function<void(EventLoop *)> timeoutcb_;
 public:
-    TcpServer(const std::string &ip, const uint16_t port);
+    TcpServer(const std::string &ip, const uint16_t port, int threadnum=3);
     ~TcpServer();
 
     void start();

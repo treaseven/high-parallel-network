@@ -54,7 +54,7 @@ ThreadPool::~ThreadPool()
         th.join();
 }
 
-void show(int no, const std::string &name)
+/*void show(int no, const std::string &name)
 {
     printf("我是第%d号报文%s。.\n", no, name.c_str());
 }
@@ -77,4 +77,4 @@ int main()
 
     threadpool.addtask(std::bind([]{ printf("我是一只傻傻鸟.\n");}));
     sleep(1);
-}
+}*/

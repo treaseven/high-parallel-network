@@ -1,4 +1,6 @@
 #include "EventLoop.h"
+#include <unistd.h>
+#include <sys/syscall.h>
 
 EventLoop::EventLoop():ep_(new Epoll)
 {
@@ -11,6 +13,7 @@ EventLoop::~EventLoop()
 
 void EventLoop::run()
 {
+    //printf("EvnetLoop::run() thread is %ld.\n", syscall(SYS_gettid));
     while(true)
     {
         std::vector<Channel *> channels = ep_->loop(10 * 1000);
