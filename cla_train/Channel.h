@@ -33,7 +33,7 @@ public:
 
     void handleevent();
 
-    void onmessage();
+    //void onmessage();
     void setreadcallback(std::function<void()> fn);
 
     void setclosecallback(std::function<void()> fn);

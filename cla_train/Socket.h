@@ -22,6 +22,7 @@ public:
     int fd() const;
     std::string ip() const;
     uint16_t port() const;
+    void setipport(const std::string &ip, uint16_t port);
     void setreuseaddr(bool on);
     void setreuseport(bool on);
     void settcpnodelay(bool on);
