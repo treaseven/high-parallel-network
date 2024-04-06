@@ -30,7 +30,7 @@ void Acceptor::newconection()
 
     Socket *clientsock = new Socket(servsock_->accept(clientaddr));
 
-    printf("accept client(fd=%d, ip=%s, port=%d) ok.\n", clientsock->fd(), clientaddr.ip(), clientaddr.port());
+    //printf("accept client(fd=%d, ip=%s, port=%d) ok.\n", clientsock->fd(), clientaddr.ip(), clientaddr.port());
 
     newconnectioncb_(clientsock);
 }
