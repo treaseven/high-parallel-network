@@ -35,16 +35,15 @@ void EchoServer::HandleError(Connection *conn)
     std::cout << "EchoServer conn error" << std::endl;
 }
 
-void EchoServer::HandleMessage(Connection *conn, std::string message)
+void EchoServer::HandleMessage(Connection *conn, std::string& message)
 {
     message = "reply:" + message;
 
-    int len = message.size();
+    /*int len = message.size();
     std::string tmpbuf((char *)&len, 4);
-    tmpbuf.append(message);
+    tmpbuf.append(message);*/
 
-    //send(conn->fd(), tmpbuf.data(), tmpbuf.size(), 0);
-    conn->send(tmpbuf.data(), tmpbuf.size());
+    conn->send(message.data(), message.size());
 }
 
 void EchoServer::HandleSendComplete(Connection *conn)

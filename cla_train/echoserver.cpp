@@ -4,8 +4,8 @@ int main(int argc, char *argv[])
 {
     if (argc != 3)
     {
-        printf("usage: ./tcpepoll ip port\n");
-        printf("example: ./tcpepoll 192.168.31.176 5085.\n\n");
+        printf("usage: ./echoserver ip port\n");
+        printf("example: ./echoserver 192.168.31.176 5085.\n\n");
         return -1;
     }
 

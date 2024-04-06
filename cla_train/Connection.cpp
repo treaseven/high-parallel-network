@@ -35,15 +35,11 @@ uint16_t Connection::port() const
 
 void Connection::closecallback()
 {
-    //printf("client(eventfs=%d) disconnected.\n", fd());
-    //close(fd());
     closecallback_(this);
 }
 
 void Connection::errorcallback()
 {
-    //printf("client(eventfd=%d) error.\n", fd());
-    //close(fd());
     errorcallback_(this);
 }
 
@@ -57,7 +53,7 @@ void Connection::seterrorcallback(std::function<void(Connection *)> fn)
     errorcallback_ = fn;
 }
 
-void Connection::setonmessagecallback(std::function<void(Connection *, std::string)> fn)
+void Connection::setonmessagecallback(std::function<void(Connection *, std::string &)> fn)
 {
     onmessagecallback_ = fn;
 }
@@ -76,8 +72,6 @@ void Connection::onmessage()
         ssize_t nread = read(fd(), buffer, sizeof(buffer));
         if (nread > 0)
         {
-            //printf("recv(eventfd=%d):%s\n", fd(), buffer);
-            //send(fd(), buffer, strlen(buffer), 0);
             inputbuffer_.append(buffer, nread);
         }
         else if (nread == -1 && errno == EINTR)
@@ -86,7 +80,6 @@ void Connection::onmessage()
         }
         else if (nread == -1 && ((errno == EAGAIN) || (errno == EWOULDBLOCK)))
         {
-            //printf("recv(eventfd=%d):%s\n", fd(), inputbuffer_.data());
             while(true)
             {
                 int len;
@@ -98,21 +91,12 @@ void Connection::onmessage()
 
                 printf("message(eventfd=%d):%s\n", fd(), message.c_str());
                 
-                /*message = "reply:" + message;
-
-                len = message.size();
-                std::string tmpbuf((char *)&len, 4);
-                tmpbuf.append(message);
-
-                send(fd(), tmpbuf.data(), tmpbuf.size(), 0);*/
                 onmessagecallback_(this, message);
             }
             break;
         }
         else if (nread == 0)
         {
-            //printf("client(eventfd=%d) disconnected.\n", fd());
-            //close(fd());
             closecallback();
             break;
         }
@@ -121,7 +105,7 @@ void Connection::onmessage()
 
 void Connection::send(const char *data, size_t size)
 {
-    outputbuffer_.append(data, size);
+    outputbuffer_.appendwithhead(data, size);
     clientchannel_->enablewriting();
 }
 

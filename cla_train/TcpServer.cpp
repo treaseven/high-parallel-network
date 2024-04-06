@@ -50,7 +50,7 @@ void TcpServer::errorconnection(Connection *conn)
     delete conn;
 }
 
-void TcpServer::onmessage(Connection *conn, std::string message)
+void TcpServer::onmessage(Connection *conn, std::string& message)
 {
     if (onmessagecb_) onmessagecb_(conn, message);
 }
