@@ -21,8 +21,9 @@ private:
     std::mutex mutex_;
     std::condition_variable condition_;
     std::atomic_bool stop_;
+    std::string threadtype_;
 public:
-    ThreadPool(size_t threadnum);
+    ThreadPool(size_t threadnum, const std::string& threadtype); 
 
     void addtask(std::function<void()> task);
 

@@ -1,6 +1,7 @@
 #include "EchoServer.h"
 
-EchoServer::EchoServer(const std::string &ip, const uint16_t port, int threadnum):tcpserver_(ip, port, threadnum)
+EchoServer::EchoServer(const std::string &ip, const uint16_t port, int subthreadnum, int workthreadnum)
+    :tcpserver_(ip, port, subthreadnum), threadpool_(workthreadnum, "WORKS")
 {
     tcpserver_.setnewconnectioncb(std::bind(&EchoServer::HandleNewConection, this, std::placeholders::_1));
     tcpserver_.setcloseconnectioncb(std::bind(&EchoServer::HandleClose, this, std::placeholders::_1));
@@ -23,7 +24,7 @@ void EchoServer::Start()
 void EchoServer::HandleNewConection(Connection *conn)
 {
     std::cout << "New Connection Come in" << std::endl;
-    printf("void EchoServer::HandleNewConection() thread is %ld.\n", syscall(SYS_gettid));
+    //printf("void EchoServer::HandleNewConection() thread is %ld.\n", syscall(SYS_gettid));
 }
 
 void EchoServer::HandleClose(Connection *conn)
@@ -38,9 +39,14 @@ void EchoServer::HandleError(Connection *conn)
 
 void EchoServer::HandleMessage(Connection *conn, std::string& message)
 {
-    printf("void EchoServer::HandleMessage() thread is %ld.\n", syscall(SYS_gettid));
-    message = "reply:" + message;
+    //printf("void EchoServer::HandleMessage() thread is %ld.\n", syscall(SYS_gettid));
+    
+    threadpool_.addtask(std::bind(&EchoServer::OnMessage, this, conn, message));
+}
 
+void EchoServer::OnMessage(Connection *conn, std::string& message)
+{
+    message = "reply:" + message;
     conn->send(message.data(), message.size());
 }
 

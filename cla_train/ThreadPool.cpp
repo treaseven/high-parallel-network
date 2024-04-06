@@ -1,12 +1,12 @@
 #include "ThreadPool.h"
 
-ThreadPool::ThreadPool(size_t threadnum):stop_(false)
+ThreadPool::ThreadPool(size_t threadnum, const std::string& threadtype):stop_(false), threadtype_(threadtype)
 {
     for (size_t ii = 0; ii < threadnum; ii++)
     {
         threads_.emplace_back([this]
         {
-            printf("create thread(%ld).\n", syscall(SYS_gettid));
+            printf("create %s thread(%ld).\n", threadtype_.c_str(), syscall(SYS_gettid));
             //std::cout << "子线程：" << std::this_thread::get_id() << std::endl;
 
             while(stop_ == false)           
@@ -27,7 +27,7 @@ ThreadPool::ThreadPool(size_t threadnum):stop_(false)
                     this->taskqueue_.pop();
                 }
 
-                printf("thread is %ld.\n", syscall(SYS_gettid));
+                printf("%s(%ld) execute task.\n", threadtype_.c_str(), syscall(SYS_gettid));
                 task();
             }
         });
