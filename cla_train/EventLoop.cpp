@@ -8,7 +8,7 @@ EventLoop::EventLoop():ep_(new Epoll)
 }
 EventLoop::~EventLoop()
 {
-    delete ep_;
+    //delete ep_;
 }
 
 void EventLoop::run()

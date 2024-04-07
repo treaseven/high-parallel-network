@@ -1,21 +1,22 @@
 #include "Connection.h"
 
-Connection::Connection(EventLoop *loop, Socket *clientsock):loop_(loop),clientsock_(clientsock),disconnect_(false)
+Connection::Connection(const std::unique_ptr <EventLoop>& loop, std::unique_ptr<Socket> clientsock)
+            :loop_(loop),clientsock_(std::move(clientsock)),disconnect_(false),clientchannel_(new Channel(loop_, clientsock_->fd()))
 {
-    clientchannel_ = new Channel(loop_, clientsock_->fd());
+    //clientchannel_ = new Channel(loop_, clientsock_->fd());
     clientchannel_->setreadcallback(std::bind(&Connection::onmessage, this));
     clientchannel_->setclosecallback(std::bind(&Connection::closecallback, this));
     clientchannel_->seterrorcallback(std::bind(&Connection::errorcallback, this));
     clientchannel_->setwritecallback(std::bind(&Connection::writecallback, this));
-    //clientchannel_->useet();
+    clientchannel_->useet();
     clientchannel_->enablereading();
 }
 
 Connection::~Connection()
 {
-    delete clientsock_;
-    delete clientchannel_;
-    printf("Connection对象已析构.\n");
+    //delete clientsock_;
+    //delete clientchannel_;
+    //printf("Connection对象已析构.\n");
 }
 
 int Connection::fd() const
@@ -102,7 +103,6 @@ void Connection::onmessage()
         }
         else if (nread == 0)
         {
-            //clientchannel_->remove();
             closecallback();
             break;
         }

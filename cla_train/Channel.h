@@ -3,6 +3,7 @@
 #include <functional>
 #include "Socket.h"
 #include "EventLoop.h"
+#include <memory>
 
 class EventLoop;
 
@@ -10,8 +11,7 @@ class Channel
 {
 private:
     int fd_ = -1;
-    //Epoll *ep_ = nullptr;
-    EventLoop *loop_ = nullptr;
+    const std::unique_ptr <EventLoop>& loop_;
     bool inepoll_ = false;
     uint32_t events_ = 0;
     uint32_t revents_ = 0;
@@ -20,7 +20,7 @@ private:
     std::function<void()> errorcallback_;
     std::function<void()> writecallback_;
 public:
-    Channel(EventLoop* loop, int fd);
+    Channel(const std::unique_ptr <EventLoop>& loop, int fd);
     ~Channel();
 
     int fd();

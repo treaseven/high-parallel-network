@@ -5,15 +5,16 @@
 #include "Acceptor.h"
 #include "ThreadPool.h"
 #include <map>
+#include <memory>
 
 class TcpServer
 {
 private:
-    EventLoop *mainloop_;
-    std::vector<EventLoop *> subloops_;
-    Acceptor *acceptor_;
-    ThreadPool *threadpool_;
+    std::unique_ptr<EventLoop> mainloop_;
+    std::vector<std::unique_ptr<EventLoop>> subloops_;
+    Acceptor acceptor_;
     int threadnum_;
+    ThreadPool threadpool_;
     std::map<int, spConnection> conns_;
     std::function<void(spConnection)> newconectioncb_;
     std::function<void(spConnection)> closeconectioncb_;
@@ -27,7 +28,7 @@ public:
 
     void start();
 
-    void newconection(Socket *clientsock);
+    void newconection(std::unique_ptr<Socket> clientsock);
     void closeconnection(spConnection conn);
     void errorconnection(spConnection conn);
     void onmessage(spConnection conn, std::string& message);

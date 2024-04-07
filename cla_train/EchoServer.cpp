@@ -47,14 +47,12 @@ void EchoServer::HandleMessage(spConnection conn, std::string& message)
 void EchoServer::OnMessage(spConnection conn, std::string& message)
 {
     message = "reply:" + message;
-    sleep(2);
-    printf("处理完业务后，将使用connection对象.\n");
     conn->send(message.data(), message.size());
 }
 
 void EchoServer::HandleSendComplete(spConnection conn)
 {
-    std::cout << "EchoServer send complete" << std::endl;
+    std::cout << "Message send complete" << std::endl;
 }
 
 /*void EchoServer::HandleTimeOut(EventLoop *loop)
