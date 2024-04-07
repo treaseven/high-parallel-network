@@ -2,7 +2,7 @@
 
 
 TcpServer::TcpServer(const std::string &ip, const uint16_t port, int threadnum)
-            :threadnum_(threadnum),mainloop_(new EventLoop),acceptor_(mainloop_.get(), ip, port), threadpool_(threadnum_, "IO")
+            :threadnum_(threadnum),mainloop_(new EventLoop(true)),acceptor_(mainloop_.get(), ip, port), threadpool_(threadnum_, "IO")
 {
     //mainloop_ = new EventLoop;
     mainloop_->setepolltimeoutcallback(std::bind(&TcpServer::epolltimeout, this, std::placeholders::_1));
@@ -13,7 +13,7 @@ TcpServer::TcpServer(const std::string &ip, const uint16_t port, int threadnum)
 
     for (int ii = 0; ii < threadnum_; ii++)
     {
-        subloops_.emplace_back(new EventLoop);
+        subloops_.emplace_back(new EventLoop(false));
         subloops_[ii]->setepolltimeoutcallback(std::bind(&TcpServer::epolltimeout, this, std::placeholders::_1));
         threadpool_.addtask(std::bind(&EventLoop::run, subloops_[ii].get()));
     }

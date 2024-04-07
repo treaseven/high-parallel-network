@@ -2,11 +2,25 @@
 #include <unistd.h>
 #include <sys/syscall.h>
 
-EventLoop::EventLoop()
-            :ep_(new Epoll), wakeupfd_(eventfd(0, EFD_NONBLOCK)), wakechannel_(new Channel(this, wakeupfd_))
+int createtimerfd(int sec=30)
+{
+    int tfd = timerfd_create(CLOCK_MONOTONIC, TFD_CLOEXEC|TFD_NONBLOCK);
+    struct itimerspec timeout;
+    memset(&timeout, 0, sizeof(struct itimerspec));
+    timeout.it_value.tv_sec = 5;
+    timeout.it_value.tv_nsec = 0;
+    timerfd_settime(tfd, 0, &timeout, 0);
+    return tfd;
+}
+
+EventLoop::EventLoop(bool mainloop)
+            :ep_(new Epoll), mainloop_(mainloop), wakeupfd_(eventfd(0, EFD_NONBLOCK)), wakechannel_(new Channel(this, wakeupfd_)),timerfd_(createtimerfd()), timerchannel_(new Channel(this, timerfd_))
 {
     wakechannel_->setreadcallback(std::bind(&EventLoop::handlewakeup, this));
     wakechannel_->enablereading(); 
+
+    timerchannel_->setreadcallback(std::bind(&EventLoop::handletimer, this));
+    timerchannel_->enablereading(); 
 }
 EventLoop::~EventLoop()
 {
@@ -87,4 +101,18 @@ void EventLoop::handlewakeup()
         taskqueue_.pop();
         fn();
     }
+}
+
+void EventLoop::handletimer()
+{
+    struct itimerspec timeout;
+    memset(&timeout, 0, sizeof(struct itimerspec));
+    timeout.it_value.tv_sec = 5;
+    timeout.it_value.tv_nsec = 0;
+    timerfd_settime(timerfd_, 0, &timeout, 0);
+
+    if (mainloop_)
+        printf("闹钟时间到了.\n");
+    else
+        printf("从事件循环的闹钟时间到了.\n");
 }

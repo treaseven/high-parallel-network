@@ -5,6 +5,7 @@
 #include <queue>
 #include <mutex>
 #include <sys/eventfd.h>
+#include <sys/timerfd.h>
 
 class Channel;
 class Epoll;
@@ -19,8 +20,11 @@ private:
     std::mutex mutex_;
     int wakeupfd_;
     std::unique_ptr<Channel> wakechannel_;
+    int timerfd_;
+    std::unique_ptr<Channel> timerchannel_;
+    bool mainloop_;
 public:
-    EventLoop();
+    EventLoop(bool mainloop);
     ~EventLoop();
 
     void run();
@@ -34,4 +38,6 @@ public:
     void queueinloop(std::function<void()> fn);
     void wakeup();
     void handlewakeup();
+
+    void handletimer();
 };

@@ -5,6 +5,7 @@
 #include "Channel.h"
 #include "EventLoop.h"
 #include "Buffer.h"
+#include "Timestamp.h"
 #include <memory>
 #include <atomic>
 
@@ -24,6 +25,7 @@ private:
     std::function<void(spConnection)> errorcallback_;
     std::function<void(spConnection, std::string&)> onmessagecallback_;
     std::function<void(spConnection)> sendcompletecallback_;
+    Timestamp lastatime_;
 public:
     Connection(EventLoop* loop, std::unique_ptr<Socket> clientsock);
     ~Connection();
