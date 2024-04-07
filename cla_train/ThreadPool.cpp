@@ -54,6 +54,11 @@ ThreadPool::~ThreadPool()
         th.join();
 }
 
+size_t ThreadPool::size()
+{
+    return threads_.size();
+}
+
 /*void show(int no, const std::string &name)
 {
     printf("我是第%d号报文%s。.\n", no, name.c_str());

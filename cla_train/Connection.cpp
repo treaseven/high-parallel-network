@@ -1,6 +1,7 @@
 #include "Connection.h"
+#include <sys/syscall.h>
 
-Connection::Connection(const std::unique_ptr <EventLoop>& loop, std::unique_ptr<Socket> clientsock)
+Connection::Connection(EventLoop* loop, std::unique_ptr<Socket> clientsock)
             :loop_(loop),clientsock_(std::move(clientsock)),disconnect_(false),clientchannel_(new Channel(loop_, clientsock_->fd()))
 {
     //clientchannel_ = new Channel(loop_, clientsock_->fd());
@@ -112,6 +113,21 @@ void Connection::onmessage()
 void Connection::send(const char *data, size_t size)
 {
     if (disconnect_ == true) {printf("客户端连接已经断开了，send()直接返回.\n"); return;}
+
+    if (loop_->isinloopthread())
+    {
+        printf("send() 在事件循环的线程中.\n");
+        sendinloop(data, size);
+    }
+    else
+    {
+        printf("send() 不在事件循环的线程中.\n");
+        loop_->queueinloop(std::bind(&Connection::sendinloop,this, data, size));
+    }
+}
+
+void Connection::sendinloop(const char *data, size_t size)
+{
     outputbuffer_.appendwithhead(data, size);
     clientchannel_->enablewriting();
 }
@@ -121,6 +137,7 @@ void Connection::writecallback()
     int writen=::send(fd(), outputbuffer_.data(), outputbuffer_.size(), 0);
     if (writen>0) outputbuffer_.erase(0, writen);
 
+    //printf("Connection::writecallback() thread is %ld.\n", syscall(SYS_gettid));
     if(outputbuffer_.size() == 0) 
     {
         clientchannel_->disablewriting();

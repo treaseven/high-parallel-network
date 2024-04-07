@@ -40,8 +40,14 @@ void EchoServer::HandleError(spConnection conn)
 void EchoServer::HandleMessage(spConnection conn, std::string& message)
 {
     //printf("void EchoServer::HandleMessage() thread is %ld.\n", syscall(SYS_gettid));
-    
-    threadpool_.addtask(std::bind(&EchoServer::OnMessage, this, conn, message));
+    if (threadpool_.size() == 0)
+    {
+        OnMessage(conn, message);
+    }
+    else
+    {
+        threadpool_.addtask(std::bind(&EchoServer::OnMessage, this, conn, message));
+    }
 }
 
 void EchoServer::OnMessage(spConnection conn, std::string& message)

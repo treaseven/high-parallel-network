@@ -14,7 +14,7 @@ using spConnection=std::shared_ptr<Connection>;
 class Connection:public std::enable_shared_from_this<Connection>
 {
 private:
-    const std::unique_ptr <EventLoop>& loop_;
+    EventLoop* loop_;
     std::unique_ptr<Socket> clientsock_;
     std::unique_ptr<Channel> clientchannel_;
     Buffer inputbuffer_;
@@ -25,7 +25,7 @@ private:
     std::function<void(spConnection, std::string&)> onmessagecallback_;
     std::function<void(spConnection)> sendcompletecallback_;
 public:
-    Connection(const std::unique_ptr <EventLoop>& loop, std::unique_ptr<Socket> clientsock);
+    Connection(EventLoop* loop, std::unique_ptr<Socket> clientsock);
     ~Connection();
 
     int fd() const;
@@ -43,4 +43,5 @@ public:
     void setsendcompletecallback(std::function<void(spConnection)> fn);
 
     void send(const char *data, size_t size);
+    void sendinloop(const char *data, size_t size);
 };

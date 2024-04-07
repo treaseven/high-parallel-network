@@ -2,7 +2,7 @@
 
 
 TcpServer::TcpServer(const std::string &ip, const uint16_t port, int threadnum)
-            :threadnum_(threadnum),mainloop_(new EventLoop),acceptor_(mainloop_, ip, port), threadpool_(threadnum_, "IO")
+            :threadnum_(threadnum),mainloop_(new EventLoop),acceptor_(mainloop_.get(), ip, port), threadpool_(threadnum_, "IO")
 {
     //mainloop_ = new EventLoop;
     mainloop_->setepolltimeoutcallback(std::bind(&TcpServer::epolltimeout, this, std::placeholders::_1));
@@ -43,7 +43,7 @@ void TcpServer::newconection(std::unique_ptr<Socket> clientsock)
 {
     //Connection *conn = new Connection(mainloop_, clientsock);
 
-    spConnection conn(new Connection(subloops_[clientsock->fd()%threadnum_], std::move(clientsock)));
+    spConnection conn(new Connection(subloops_[clientsock->fd()%threadnum_].get(), std::move(clientsock)));
     conn->setclosecallback(std::bind(&TcpServer::closeconnection, this, std::placeholders::_1));
     conn->seterrorcallback(std::bind(&TcpServer::errorconnection, this, std::placeholders::_1));
     conn->setonmessagecallback(std::bind(&TcpServer::onmessage, this, std::placeholders::_1, std::placeholders::_2));

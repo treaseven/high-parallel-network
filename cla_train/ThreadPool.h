@@ -27,5 +27,7 @@ public:
 
     void addtask(std::function<void()> task);
 
+    size_t size();
+
     ~ThreadPool();
 };
