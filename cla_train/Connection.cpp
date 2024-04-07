@@ -1,6 +1,6 @@
 #include "Connection.h"
 
-Connection::Connection(EventLoop *loop, Socket *clientsock):loop_(loop),clientsock_(clientsock)
+Connection::Connection(EventLoop *loop, Socket *clientsock):loop_(loop),clientsock_(clientsock),disconnect_(false)
 {
     clientchannel_ = new Channel(loop_, clientsock_->fd());
     clientchannel_->setreadcallback(std::bind(&Connection::onmessage, this));
@@ -15,6 +15,7 @@ Connection::~Connection()
 {
     delete clientsock_;
     delete clientchannel_;
+    printf("Connection对象已析构.\n");
 }
 
 int Connection::fd() const
@@ -35,30 +36,34 @@ uint16_t Connection::port() const
 
 void Connection::closecallback()
 {
-    closecallback_(this);
+    disconnect_ = true;
+    clientchannel_->remove();
+    closecallback_(shared_from_this());
 }
 
 void Connection::errorcallback()
 {
-    errorcallback_(this);
+    disconnect_ = true;
+    clientchannel_->remove();
+    errorcallback_(shared_from_this());
 }
 
-void Connection::setclosecallback(std::function<void(Connection *)> fn)
+void Connection::setclosecallback(std::function<void(spConnection)> fn)
 {
     closecallback_ = fn;
 }
 
-void Connection::seterrorcallback(std::function<void(Connection *)> fn)
+void Connection::seterrorcallback(std::function<void(spConnection)> fn)
 {
     errorcallback_ = fn;
 }
 
-void Connection::setonmessagecallback(std::function<void(Connection *, std::string &)> fn)
+void Connection::setonmessagecallback(std::function<void(spConnection, std::string &)> fn)
 {
     onmessagecallback_ = fn;
 }
 
-void Connection::setsendcompletecallback(std::function<void(Connection *)> fn)
+void Connection::setsendcompletecallback(std::function<void(spConnection)> fn)
 {
     sendcompletecallback_ = fn;
 }
@@ -91,12 +96,13 @@ void Connection::onmessage()
 
                 printf("message(eventfd=%d):%s\n", fd(), message.c_str());
                 
-                onmessagecallback_(this, message);
+                onmessagecallback_(shared_from_this(), message);
             }
             break;
         }
         else if (nread == 0)
         {
+            //clientchannel_->remove();
             closecallback();
             break;
         }
@@ -105,6 +111,7 @@ void Connection::onmessage()
 
 void Connection::send(const char *data, size_t size)
 {
+    if (disconnect_ == true) {printf("客户端连接已经断开了，send()直接返回.\n"); return;}
     outputbuffer_.appendwithhead(data, size);
     clientchannel_->enablewriting();
 }
@@ -117,6 +124,6 @@ void Connection::writecallback()
     if(outputbuffer_.size() == 0) 
     {
         clientchannel_->disablewriting();
-        sendcompletecallback_(this);
+        sendcompletecallback_(shared_from_this());
     }
 }

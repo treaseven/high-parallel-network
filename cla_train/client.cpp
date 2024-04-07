@@ -55,6 +55,9 @@ int main(int argc, char *argv[])
         send(sockfd, tmpbuf, len+4, 0);
     }
 
+    sleep(1);
+    return 0;
+
     for (int ii = 0; ii < 1; ii++)
     {
         int len;

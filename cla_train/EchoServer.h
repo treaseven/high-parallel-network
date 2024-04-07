@@ -14,12 +14,12 @@ public:
     ~EchoServer();
 
     void Start();
-    void HandleNewConection(Connection *conn);
-    void HandleClose(Connection *conn);
-    void HandleError(Connection *conn);
-    void HandleMessage(Connection *conn, std::string& message);
-    void HandleSendComplete(Connection *conn);
+    void HandleNewConection(spConnection conn);
+    void HandleClose(spConnection conn);
+    void HandleError(spConnection conn);
+    void HandleMessage(spConnection conn, std::string& message);
+    void HandleSendComplete(spConnection conn);
     //void HandleTimeOut(EventLoop *loop);
 
-    void OnMessage(Connection *conn, std::string& message);
+    void OnMessage(spConnection conn, std::string& message);
 };

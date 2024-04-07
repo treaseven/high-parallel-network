@@ -22,10 +22,10 @@ TcpServer::~TcpServer()
 {
     delete acceptor_;
     delete mainloop_;
-    for (auto &aa:conns_)
+    /*for (auto &aa:conns_)
     {
         delete aa.second;
-    }
+    }*/
 
     for (auto &aa:subloops_)
         delete aa;
@@ -42,7 +42,7 @@ void TcpServer::newconection(Socket *clientsock)
 {
     //Connection *conn = new Connection(mainloop_, clientsock);
 
-    Connection *conn = new Connection(subloops_[clientsock->fd()%threadnum_], clientsock);
+    spConnection conn(new Connection(subloops_[clientsock->fd()%threadnum_], clientsock));
     conn->setclosecallback(std::bind(&TcpServer::closeconnection, this, std::placeholders::_1));
     conn->seterrorcallback(std::bind(&TcpServer::errorconnection, this, std::placeholders::_1));
     conn->setonmessagecallback(std::bind(&TcpServer::onmessage, this, std::placeholders::_1, std::placeholders::_2));
@@ -53,26 +53,26 @@ void TcpServer::newconection(Socket *clientsock)
     if (newconectioncb_) newconectioncb_(conn);
 }
 
-void TcpServer::closeconnection(Connection *conn)
+void TcpServer::closeconnection(spConnection conn)
 {
     if (closeconectioncb_) closeconectioncb_(conn);
     conns_.erase(conn->fd());
-    delete conn;
+    //delete conn;
 }
 
-void TcpServer::errorconnection(Connection *conn)
+void TcpServer::errorconnection(spConnection conn)
 {
     if (errorconectioncb_) errorconectioncb_(conn);
     conns_.erase(conn->fd());
-    delete conn;
+    //delete conn;
 }
 
-void TcpServer::onmessage(Connection *conn, std::string& message)
+void TcpServer::onmessage(spConnection conn, std::string& message)
 {
     if (onmessagecb_) onmessagecb_(conn, message);
 }
 
-void TcpServer::sendcomplete(Connection *conn)
+void TcpServer::sendcomplete(spConnection conn)
 {
     printf("send complete.\n");
 
@@ -84,27 +84,27 @@ void TcpServer::epolltimeout(EventLoop *loop)
     if (timeoutcb_) timeoutcb_(loop);
 }
 
-void TcpServer::setnewconnectioncb(std::function<void(Connection *)> fn)
+void TcpServer::setnewconnectioncb(std::function<void(spConnection)> fn)
 {
     newconectioncb_ = fn;
 }
 
-void TcpServer::setcloseconnectioncb(std::function<void(Connection *)> fn)
+void TcpServer::setcloseconnectioncb(std::function<void(spConnection)> fn)
 {
     closeconectioncb_ = fn;
 }
 
-void TcpServer::seterrorconnectioncb(std::function<void(Connection *)> fn)
+void TcpServer::seterrorconnectioncb(std::function<void(spConnection)> fn)
 {
     errorconectioncb_ = fn;
 }
 
-void TcpServer::setonmessagecb(std::function<void(Connection *, std::string &message)> fn)
+void TcpServer::setonmessagecb(std::function<void(spConnection, std::string &message)> fn)
 {
     onmessagecb_ = fn;
 }
 
-void TcpServer::setsendcompletecb(std::function<void(Connection *)> fn)
+void TcpServer::setsendcompletecb(std::function<void(spConnection)> fn)
 {
     sendcompletecb_ = fn;
 }

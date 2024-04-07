@@ -17,5 +17,6 @@ public:
     void run();
 
     void updatechannel(Channel *ch);
+    void removechannel(Channel *ch);
     void setepolltimeoutcallback(std::function<void(EventLoop *)> fn);
 };
