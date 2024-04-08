@@ -6,13 +6,19 @@
 #include <mutex>
 #include <sys/eventfd.h>
 #include <sys/timerfd.h>
+#include <map>
+#include "Connection.h"
 
 class Channel;
 class Epoll;
+class Connection;
+using spConnection=std::shared_ptr<Connection>;
 
 class EventLoop
 {
 private:
+    int timetvl_;
+    int timeout_;
     std::unique_ptr<Epoll> ep_;
     std::function<void(EventLoop *)> epolltimeoutcallback_;
     pid_t threadid_;
@@ -23,8 +29,11 @@ private:
     int timerfd_;
     std::unique_ptr<Channel> timerchannel_;
     bool mainloop_;
+    std::mutex mmtuex_;
+    std::map<int, spConnection> conns_;
+    std::function<void(int)> timercallback_;
 public:
-    EventLoop(bool mainloop);
+    EventLoop(bool mainloop, int timetvl=30, int timeout=80);
     ~EventLoop();
 
     void run();
@@ -40,4 +49,7 @@ public:
     void handlewakeup();
 
     void handletimer();
+
+    void newconnection(spConnection conn);
+    void settimercallback(std::function<void(int)> fn);
 };

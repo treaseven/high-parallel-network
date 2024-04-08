@@ -15,9 +15,7 @@ Connection::Connection(EventLoop* loop, std::unique_ptr<Socket> clientsock)
 
 Connection::~Connection()
 {
-    //delete clientsock_;
-    //delete clientchannel_;
-    //printf("Connection对象已析构.\n");
+    printf("conn已析构.\n");
 }
 
 int Connection::fd() const
@@ -145,4 +143,9 @@ void Connection::writecallback()
         clientchannel_->disablewriting();
         sendcompletecallback_(shared_from_this());
     }
+}
+
+bool Connection::timeout(time_t now, int val)
+{
+    return now - lastatime_.toint()>val;
 }

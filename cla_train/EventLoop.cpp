@@ -7,14 +7,15 @@ int createtimerfd(int sec=30)
     int tfd = timerfd_create(CLOCK_MONOTONIC, TFD_CLOEXEC|TFD_NONBLOCK);
     struct itimerspec timeout;
     memset(&timeout, 0, sizeof(struct itimerspec));
-    timeout.it_value.tv_sec = 5;
+    timeout.it_value.tv_sec = sec;
     timeout.it_value.tv_nsec = 0;
     timerfd_settime(tfd, 0, &timeout, 0);
     return tfd;
 }
 
-EventLoop::EventLoop(bool mainloop)
-            :ep_(new Epoll), mainloop_(mainloop), wakeupfd_(eventfd(0, EFD_NONBLOCK)), wakechannel_(new Channel(this, wakeupfd_)),timerfd_(createtimerfd()), timerchannel_(new Channel(this, timerfd_))
+EventLoop::EventLoop(bool mainloop, int timetvl, int timeout)
+            :ep_(new Epoll), mainloop_(mainloop), timetvl_(timetvl), timeout_(timeout), 
+            wakeupfd_(eventfd(0, EFD_NONBLOCK)), wakechannel_(new Channel(this, wakeupfd_)),timerfd_(createtimerfd(timeout_)), timerchannel_(new Channel(this, timerfd_))
 {
     wakechannel_->setreadcallback(std::bind(&EventLoop::handlewakeup, this));
     wakechannel_->enablereading(); 
@@ -107,12 +108,45 @@ void EventLoop::handletimer()
 {
     struct itimerspec timeout;
     memset(&timeout, 0, sizeof(struct itimerspec));
-    timeout.it_value.tv_sec = 5;
+    timeout.it_value.tv_sec = timetvl_;
     timeout.it_value.tv_nsec = 0;
     timerfd_settime(timerfd_, 0, &timeout, 0);
 
     if (mainloop_)
-        printf("闹钟时间到了.\n");
+    {
+        //printf("闹钟时间到了.\n");
+    }
     else
-        printf("从事件循环的闹钟时间到了.\n");
+    {
+        //printf("从事件循环的闹钟时间到了.\n");
+        printf("EventLoop::handletimer() thread is %ld.fd", syscall(SYS_gettid));
+        time_t now = time(0);
+        for(auto aa:conns_)
+        {
+            printf(" %d", aa.first);
+            if (aa.second->timeout(now, timeout_))
+            {
+                {
+                    std::lock_guard<std::mutex> gd(mmtuex_);
+                    conns_.erase(aa.first);
+                }
+                timercallback_(aa.first);
+
+            }
+        }
+        printf(".\n");
+    }
+}
+
+void EventLoop::newconnection(spConnection conn)
+{
+    {
+        std::lock_guard<std::mutex> gd(mmtuex_);
+        conns_[conn->fd()] = conn;
+    }
+}
+
+void EventLoop::settimercallback(std::function<void(int)> fn)
+{
+    timercallback_ = fn;
 }

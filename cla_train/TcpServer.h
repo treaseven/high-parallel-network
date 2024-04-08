@@ -6,6 +6,7 @@
 #include "ThreadPool.h"
 #include <map>
 #include <memory>
+#include <mutex>
 
 class TcpServer
 {
@@ -15,6 +16,7 @@ private:
     Acceptor acceptor_;
     int threadnum_;
     ThreadPool threadpool_;
+    std::mutex mmtuex_;
     std::map<int, spConnection> conns_;
     std::function<void(spConnection)> newconectioncb_;
     std::function<void(spConnection)> closeconectioncb_;
@@ -41,4 +43,6 @@ public:
     void setonmessagecb(std::function<void(spConnection, std::string &message)> fn);
     void setsendcompletecb(std::function<void(spConnection)> fn);
     void settimeoutcb(std::function<void(EventLoop *)> fn);
+
+    void removeconn(int fd);
 };

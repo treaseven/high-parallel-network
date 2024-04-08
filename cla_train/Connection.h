@@ -9,6 +9,8 @@
 #include <memory>
 #include <atomic>
 
+class EventLoop;
+class Channel;
 class Connection;
 using spConnection=std::shared_ptr<Connection>;
 
@@ -46,4 +48,6 @@ public:
 
     void send(const char *data, size_t size);
     void sendinloop(const char *data, size_t size);
+
+    bool timeout(time_t now, int val);
 };
