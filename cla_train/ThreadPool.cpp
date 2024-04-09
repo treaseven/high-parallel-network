@@ -27,7 +27,7 @@ ThreadPool::ThreadPool(size_t threadnum, const std::string& threadtype):stop_(fa
                     this->taskqueue_.pop();
                 }
 
-                printf("%s(%ld) execute task.\n", threadtype_.c_str(), syscall(SYS_gettid));
+                //printf("%s(%ld) execute task.\n", threadtype_.c_str(), syscall(SYS_gettid));
                 task();
             }
         });
@@ -44,14 +44,20 @@ void ThreadPool::addtask(std::function<void()> task)
     condition_.notify_one();
 }
 
-ThreadPool::~ThreadPool()
+void ThreadPool::stop()
 {
+    if(stop_) return;
     stop_ = true;
 
     condition_.notify_all();
 
     for (std::thread &th : threads_)
         th.join();
+}
+
+ThreadPool::~ThreadPool()
+{
+    stop();
 }
 
 size_t ThreadPool::size()

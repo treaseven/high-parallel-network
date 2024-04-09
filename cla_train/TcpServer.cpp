@@ -17,7 +17,6 @@ TcpServer::TcpServer(const std::string &ip, const uint16_t port, int threadnum)
         subloops_[ii]->setepolltimeoutcallback(std::bind(&TcpServer::epolltimeout, this, std::placeholders::_1));
         subloops_[ii]->settimercallback(std::bind(&TcpServer::removeconn, this, std::placeholders::_1));
         threadpool_.addtask(std::bind(&EventLoop::run, subloops_[ii].get()));
-        sleep(1);
     }
 }
 
@@ -41,6 +40,21 @@ void TcpServer::start()
     mainloop_->run();
 }
 
+void TcpServer::stop()
+{
+    mainloop_->stop();
+    printf("主事件循环已停止.\n");
+
+    for(int ii = 0; ii < threadnum_; ii++)
+    {
+        subloops_[ii]->stop();
+    }
+    printf("从事件循环已停止.\n");
+
+    threadpool_.stop();
+    printf("IO线程池停止.\n");
+}
+
 void TcpServer::newconection(std::unique_ptr<Socket> clientsock)
 {
     //Connection *conn = new Connection(mainloop_, clientsock);
@@ -51,6 +65,7 @@ void TcpServer::newconection(std::unique_ptr<Socket> clientsock)
     conn->setonmessagecallback(std::bind(&TcpServer::onmessage, this, std::placeholders::_1, std::placeholders::_2));
     conn->setsendcompletecallback(std::bind(&TcpServer::sendcomplete, this, std::placeholders::_1));
 
+    //printf("new connection(fd=%d, ip=%s, port=%d) ok.\n", conn->fd(), conn->ip().c_str(), conn->port());
     {
         std::lock_guard<std::mutex> gd(mmtuex_);
         conns_[conn->fd()] = conn;

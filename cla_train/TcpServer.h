@@ -29,6 +29,7 @@ public:
     ~TcpServer();
 
     void start();
+    void stop();
 
     void newconection(std::unique_ptr<Socket> clientsock);
     void closeconnection(spConnection conn);

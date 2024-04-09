@@ -7,6 +7,7 @@
 #include <sys/eventfd.h>
 #include <sys/timerfd.h>
 #include <map>
+#include <atomic>
 #include "Connection.h"
 
 class Channel;
@@ -32,11 +33,13 @@ private:
     std::mutex mmtuex_;
     std::map<int, spConnection> conns_;
     std::function<void(int)> timercallback_;
+    std::atomic_bool stop_;
 public:
     EventLoop(bool mainloop, int timetvl=30, int timeout=80);
     ~EventLoop();
 
     void run();
+    void stop();
 
     void updatechannel(Channel *ch);
     void removechannel(Channel *ch);

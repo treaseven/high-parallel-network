@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
     if (argc != 3)
     {
         printf("usage: ./client ip port\n");
-        printf("example: ./client 192.168.31.176 5085\n\n");
+        printf("example: ./client 192.168.190.131 5085\n\n");
         return -1;
     }
 
@@ -41,8 +41,7 @@ int main(int argc, char *argv[])
 
     printf("connect ok.\n");
 
-    sleep(1000);
-    for (int ii = 0; ii < 10; ii++)
+    /*for (int ii = 0; ii < 10; ii++)
     {
         memset(buf, 0, sizeof(buf));
         sprintf(buf, "这是第%d个报文", ii);
@@ -62,7 +61,20 @@ int main(int argc, char *argv[])
         printf("recv:%s\n", buf);
 
         sleep(1);
-    }
+    }*/
+    
+    for (int ii = 0; ii < 10; ii++)
+    {
+        memset(buf, 0, sizeof(buf));
+        sprintf(buf, "这是第%d个报文.", ii);
 
-    sleep(100);
+        send(sockfd, buf, strlen(buf), 0);
+
+        memset(buf, 0, sizeof(buf));
+        recv(sockfd, buf, 1024, 0);
+
+        printf("recv:%s\n", buf);
+
+        sleep(1);
+    }
 }

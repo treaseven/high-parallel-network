@@ -1,6 +1,7 @@
 #include "Buffer.h"
+#include <cstring>
 
-Buffer::Buffer()
+Buffer::Buffer(uint16_t sep):sep_(sep)
 {
 
 }
@@ -15,10 +16,17 @@ void Buffer::append(const char *data, size_t size)
     buf_.append(data, size);
 }
 
-void Buffer::appendwithhead(const char *data, size_t size)
+void Buffer::appendwithsep(const char *data, size_t size)
 {
-    buf_.append((char *)&size, 4);
-    buf_.append(data, size);
+    if (sep_ == 0)
+    {
+        buf_.append(data, size);
+    }
+    else if (sep_ == -1)
+    {
+        buf_.append((char *)&size, 4);
+        buf_.append(data, size);
+    }
 }
 
 size_t Buffer::size()
@@ -39,4 +47,26 @@ void Buffer::clear()
 void Buffer::erase(size_t pos, size_t nn)
 {
     buf_.erase(pos, nn);
+}
+
+bool Buffer::pickmessage(std::string &ss)
+{
+    if (buf_.size() == 0) return false;
+
+    if (sep_ == 0)
+    {
+        ss = buf_;
+        buf_.clear();
+    }
+    else if (sep_ == 1)
+    {
+        int len;
+        memcpy(&len, buf_.data(), 4);
+        if(buf_.size()<len+4) return false;
+
+        ss = buf_.substr(4, len);
+        buf_.erase(0, len+4);
+    }
+
+    return true;
 }

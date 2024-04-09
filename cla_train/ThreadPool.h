@@ -29,5 +29,7 @@ public:
 
     size_t size();
 
+    void stop();
+
     ~ThreadPool();
 };

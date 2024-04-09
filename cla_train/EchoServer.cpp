@@ -21,20 +21,30 @@ void EchoServer::Start()
     tcpserver_.start();
 }
 
+void EchoServer::Stop()
+{
+    threadpool_.stop();
+    printf("工作线程已停止.\n");
+
+    tcpserver_.stop();
+}
+
 void EchoServer::HandleNewConection(spConnection conn)
 {
-    std::cout << "New Connection Come in" << std::endl;
+    //std::cout << "New Connection Come in" << std::endl;
     //printf("void EchoServer::HandleNewConection() thread is %ld.\n", syscall(SYS_gettid));
+    printf("new connection(fd=%d, ip=%s, port=%d) ok.\n", conn->fd(), conn->ip().c_str(), conn->port());
 }
 
 void EchoServer::HandleClose(spConnection conn)
 {
-    std::cout << "EchoServer conn close" << std::endl;
+    printf("connection close(fd=%d, ip=%s, port=%d) ok.\n", conn->fd(), conn->ip().c_str(), conn->port());
+    //std::cout << "EchoServer conn close" << std::endl;
 }
 
 void EchoServer::HandleError(spConnection conn)
 {
-    std::cout << "EchoServer conn error" << std::endl;
+    //std::cout << "EchoServer conn error" << std::endl;
 }
 
 void EchoServer::HandleMessage(spConnection conn, std::string& message)
@@ -58,7 +68,7 @@ void EchoServer::OnMessage(spConnection conn, std::string& message)
 
 void EchoServer::HandleSendComplete(spConnection conn)
 {
-    std::cout << "Message send complete" << std::endl;
+    //std::cout << "Message send complete" << std::endl;
 }
 
 /*void EchoServer::HandleTimeOut(EventLoop *loop)

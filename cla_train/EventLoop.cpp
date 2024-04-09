@@ -14,7 +14,7 @@ int createtimerfd(int sec=30)
 }
 
 EventLoop::EventLoop(bool mainloop, int timetvl, int timeout)
-            :ep_(new Epoll), mainloop_(mainloop), timetvl_(timetvl), timeout_(timeout), 
+            :ep_(new Epoll), mainloop_(mainloop), timetvl_(timetvl), timeout_(timeout), stop_(false),
             wakeupfd_(eventfd(0, EFD_NONBLOCK)), wakechannel_(new Channel(this, wakeupfd_)),timerfd_(createtimerfd(timeout_)), timerchannel_(new Channel(this, timerfd_))
 {
     wakechannel_->setreadcallback(std::bind(&EventLoop::handlewakeup, this));
@@ -32,7 +32,7 @@ void EventLoop::run()
 {
     threadid_ = syscall(SYS_gettid);
     //printf("EvnetLoop::run() thread is %ld.\n", syscall(SYS_gettid));
-    while(true)
+    while(stop_ == false)
     {
         std::vector<Channel *> channels = ep_->loop(10 * 1000);
 
@@ -48,6 +48,12 @@ void EventLoop::run()
             }
         }
     } 
+}
+
+void EventLoop::stop()
+{
+    stop_ = true;
+    wakeup();
 }
 
 void EventLoop::updatechannel(Channel *ch)
@@ -88,7 +94,6 @@ void EventLoop::wakeup()
 
 void EventLoop::handlewakeup()
 {
-    printf("handlewakeup() thread id is %ld.\n", syscall(SYS_gettid));
     uint64_t val;
     read(wakeupfd_, &val, sizeof(val));
 
@@ -118,12 +123,9 @@ void EventLoop::handletimer()
     }
     else
     {
-        //printf("从事件循环的闹钟时间到了.\n");
-        printf("EventLoop::handletimer() thread is %ld.fd", syscall(SYS_gettid));
         time_t now = time(0);
         for(auto aa:conns_)
         {
-            printf(" %d", aa.first);
             if (aa.second->timeout(now, timeout_))
             {
                 {
@@ -134,7 +136,6 @@ void EventLoop::handletimer()
 
             }
         }
-        printf(".\n");
     }
 }
 

@@ -15,7 +15,7 @@ Connection::Connection(EventLoop* loop, std::unique_ptr<Socket> clientsock)
 
 Connection::~Connection()
 {
-    printf("conn已析构.\n");
+    //printf("conn已析构.\n");
 }
 
 int Connection::fd() const
@@ -85,15 +85,10 @@ void Connection::onmessage()
         }
         else if (nread == -1 && ((errno == EAGAIN) || (errno == EWOULDBLOCK)))
         {
+            std::string message;
             while(true)
             {
-                int len;
-                memcpy(&len, inputbuffer_.data(), 4);
-                if(inputbuffer_.size()<len+4) break;
-
-                std::string message(inputbuffer_.data()+4, len);
-                inputbuffer_.erase(0, len+4);
-
+                if (inputbuffer_.pickmessage(message) == false) break;
                 printf("message(eventfd=%d):%s\n", fd(), message.c_str());
                 lastatime_ = Timestamp::now();
                 //std::cout << "lastatime=" << lastatime_.tostring() << std::endl;
@@ -116,19 +111,19 @@ void Connection::send(const char *data, size_t size)
 
     if (loop_->isinloopthread())
     {
-        printf("send() 在事件循环的线程中.\n");
+        //printf("send() 在事件循环的线程中.\n");
         sendinloop(data, size);
     }
     else
     {
-        printf("send() 不在事件循环的线程中.\n");
+        //printf("send() 不在事件循环的线程中.\n");
         loop_->queueinloop(std::bind(&Connection::sendinloop,this, data, size));
     }
 }
 
 void Connection::sendinloop(const char *data, size_t size)
 {
-    outputbuffer_.appendwithhead(data, size);
+    outputbuffer_.appendwithsep(data, size);
     clientchannel_->enablewriting();
 }
 
